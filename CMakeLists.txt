@@ -111,6 +111,8 @@ if(${COMPILE_METHOD} STREQUAL "CATKIN")
       roslib
       pcl_ros
       pcl_conversions
+      pluginlib
+      nodelet
   )
 
   catkin_package(
@@ -119,6 +121,8 @@ if(${COMPILE_METHOD} STREQUAL "CATKIN")
       sensor_msgs
       roslib
       pcl_conversions
+      pluginlib
+      nodelet
   )
 endif(${COMPILE_METHOD} STREQUAL "CATKIN")
 
@@ -160,6 +164,19 @@ if(NOT PROTOC MATCHES "NOTFOUND" AND Protobuf_FOUND)
                       ${PROTOBUF_LIBRARY}
                       ${rs_driver_LIBRARIES}
                       )
+  add_library(rslidar_sdk_nodelet
+          node/rslidar_sdk_nodelet.cpp
+          src/manager/adapter_manager.cpp
+          ${PROTO_FILE_PATH}/packet.pb.cc
+          ${PROTO_FILE_PATH}/scan.pb.cc
+          ${PROTO_FILE_PATH}/point_cloud.pb.cc
+          )
+  target_link_libraries(rslidar_sdk_nodelet
+                      ${PCL_LIBRARIES}
+                      ${YAML_CPP_LIBRARIES}
+                      ${PROTOBUF_LIBRARY}
+                      ${rs_driver_LIBRARIES}
+                      )
 else(NOT PROTOC MATCHES "NOTFOUND" AND Protobuf_FOUND)
   add_executable(rslidar_sdk_node
               node/rslidar_sdk_node.cpp
@@ -170,11 +187,21 @@ else(NOT PROTOC MATCHES "NOTFOUND" AND Protobuf_FOUND)
                       ${YAML_CPP_LIBRARIES}
                       ${rs_driver_LIBRARIES}
                       )
+  add_library(rslidar_sdk_nodelet
+          node/rslidar_sdk_nodelet.cpp
+          src/manager/adapter_manager.cpp
+          )
+  target_link_libraries(rslidar_sdk_nodelet
+                      ${PCL_LIBRARIES}
+                      ${YAML_CPP_LIBRARIES}
+                      ${rs_driver_LIBRARIES}
+                      )
 endif(NOT PROTOC MATCHES "NOTFOUND" AND Protobuf_FOUND)
 
 #Ros#
 if(roscpp_FOUND)
-  target_link_libraries(rslidar_sdk_node ${ROS_LIBS})
+  target_link_libraries(rslidar_sdk_node ${ROS_LIBS} ${catkin_LIBRARIES})
+  target_link_libraries(rslidar_sdk_nodelet ${ROS_LIBS} ${catkin_LIBRARIES})
   if(${COMPILE_METHOD} STREQUAL "CATKIN")
     install(TARGETS rslidar_sdk_node
             RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
